@@ -27,6 +27,7 @@
 }
 
 
+
 -(void)calculate:(NSString*)tipAmountString{
     NSDecimalNumber *bill = [[NSDecimalNumber alloc]initWithString:self.billAmountTextField.text];
     
@@ -46,15 +47,24 @@
     
 }
 
+#pragma mark - Interface Controls
 - (IBAction)calculateTip:(id)sender {
     [self calculate:@""];
-    
 }
+
+- (IBAction)adjustSlider:(id)sender {
+    self.sliderTip.text = [NSString stringWithFormat:@"%2.0f", self.adjustTipPercentage.value];
+    [self calculate:@""];
+}
+
+#pragma mark - Utility methods
 
 - (IBAction)resignFirstResponder:(id)sender {
     [self.billAmountTextField resignFirstResponder];
     [self.tipPercentageField resignFirstResponder];
 }
+
+#pragma mark - KeyBoard Related
 -(BOOL)textFieldShouldBeginEditing:(UITextField *)textField{
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(keyBoardDidShow:) name:UIKeyboardDidShowNotification object:nil];
     return YES;
@@ -80,10 +90,6 @@
                       self.view.bounds = CGRectMake(0, 0, self.view.frame.size.width,self.view.frame.size.height);
                      }];
 }
-- (IBAction)adjustSlider:(id)sender {
-        self.sliderTip.text = [NSString stringWithFormat:@"%2.0f", self.adjustTipPercentage.value];
-    [self calculate:@""];
-}
 
 
 #pragma mark - TextField Delegate Methods
@@ -105,9 +111,6 @@
         self.tipAmountLabel.text = [NSString stringWithFormat:@"Tip: %@", [currencyFormatter stringFromNumber:self.tipAmount]];
     return YES;
 }
-
-//-(void)
-
 
 
 
