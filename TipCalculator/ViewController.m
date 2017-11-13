@@ -24,23 +24,24 @@
 - (void)viewDidLoad {
     self.billAmountTextField.delegate = self;
     self.tipPercentageField.delegate = self;
+    self.adjustTipPercentage.value = 0;
 }
 
 
 
--(void)calculate:(NSString*)tipAmountString{
-    NSDecimalNumber *bill = [[NSDecimalNumber alloc]initWithString:self.billAmountTextField.text];
+-(void)calculate:(NSString*)tipAmountString totalBill:(NSString*)bill{
+    NSDecimalNumber *billAmount = [[NSDecimalNumber alloc]initWithString:bill];
     
-    if (![self.tipPercentageField.text isEqualToString:@""]) {
+    if (!([tipAmountString isEqualToString:@""])) {
         float tip = [bill floatValue] * ([tipAmountString floatValue]/100);
         self.tipAmount = [[NSDecimalNumber alloc]initWithFloat:tip];
     }
-    else if (!(self.adjustTipPercentage.value == 0)){
-        float tip = [bill floatValue] * (self.adjustTipPercentage.value/100);
+    else if (self.adjustTipPercentage.value){
+        float tip = [billAmount floatValue] * (self.adjustTipPercentage.value/100);
         self.tipAmount = [[NSDecimalNumber alloc]initWithFloat:tip];
     }
     else{
-        float defaultTip = [bill floatValue] *0.15;
+        float defaultTip = [billAmount floatValue] *0.15;
         self.tipAmount = [[NSDecimalNumber alloc]initWithFloat:defaultTip];
     }
     
@@ -49,12 +50,15 @@
 
 #pragma mark - Interface Controls
 - (IBAction)calculateTip:(id)sender {
-    [self calculate:@""];
+    [self calculate:@"" totalBill:@""];
 }
 
 - (IBAction)adjustSlider:(id)sender {
     self.sliderTip.text = [NSString stringWithFormat:@"%2.0f", self.adjustTipPercentage.value];
-    [self calculate:@""];
+    [self calculate:@"" totalBill:self.billAmountTextField.text];
+    NSNumberFormatter *currencyFormatter = [[NSNumberFormatter alloc]init];
+    [currencyFormatter setNumberStyle:NSNumberFormatterCurrencyStyle];
+    self.tipAmountLabel.text = [NSString stringWithFormat:@"Tip: %@", [currencyFormatter stringFromNumber:self.tipAmount]];
 }
 
 #pragma mark - Utility methods
@@ -95,20 +99,39 @@
 #pragma mark - TextField Delegate Methods
 
 -(BOOL)textField:(UITextField *)textField shouldChangeCharactersInRange:(NSRange)range replacementString:(NSString *)string{
-    NSString *tipTextFieldText = self.tipPercentageField.text;
-    BOOL isDeleting = range.length == 1;
-    if (isDeleting) {
-        tipTextFieldText = [tipTextFieldText substringToIndex:range.location];
-    }
-    else{
-    tipTextFieldText = [self.tipPercentageField.text stringByAppendingString:string];
-    }
-        [self calculate:tipTextFieldText];
+    if ([self.tipPercentageField isFirstResponder]) {
+        NSString *tipTextFieldText = self.tipPercentageField.text;
+        BOOL isDeleting = range.length == 1;
+        if (isDeleting) {
+            tipTextFieldText = [tipTextFieldText substringToIndex:range.location];
+        }
+        else{
+            tipTextFieldText = [self.tipPercentageField.text stringByAppendingString:string];
+        }
+        [self calculate:tipTextFieldText totalBill:self.billAmountTextField.text];
         self.tipAmountLabel.text = @"";
-    
+        
         NSNumberFormatter *currencyFormatter = [[NSNumberFormatter alloc]init];
         [currencyFormatter setNumberStyle:NSNumberFormatterCurrencyStyle];
         self.tipAmountLabel.text = [NSString stringWithFormat:@"Tip: %@", [currencyFormatter stringFromNumber:self.tipAmount]];
+    }
+    
+    else if ([self.billAmountTextField isFirstResponder]){
+        NSString *billTextFieldText = self.billAmountTextField.text;
+        BOOL isDeleting = range.length == 1;
+        if (isDeleting) {
+            billTextFieldText = [billTextFieldText substringToIndex:range.location];
+        }
+        else{
+            billTextFieldText = [self.billAmountTextField.text stringByAppendingString:string];
+        }
+        [self calculate:self.tipPercentageField.text totalBill:billTextFieldText];
+        
+        NSNumberFormatter *currencyFormatter = [[NSNumberFormatter alloc]init];
+        [currencyFormatter setNumberStyle:NSNumberFormatterCurrencyStyle];
+        self.tipAmountLabel.text = [NSString stringWithFormat:@"Tip: %@", [currencyFormatter stringFromNumber:self.tipAmount]];
+        
+    }
     return YES;
 }
 
